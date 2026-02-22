@@ -1,12 +1,11 @@
 # Model settings — passed directly to vllm.LLM()
 # Full parameter reference: https://docs.vllm.ai/en/stable/api/vllm/#vllm.LLM
 model:
-  model: /path/to/your/model
+  model: ./models/Qwen3-0.6B
   quantization: null
-  dtype: auto
-  gpu_memory_utilization: 0.9
-  max_model_len: null
-  trust_remote_code: true
+  dtype: float16
+  max_model_len: 1024
+  gpu_memory_utilization: 0.8
 
 # Sampling settings — passed directly to vllm.SamplingParams()
 # Full parameter reference: https://docs.vllm.ai/en/stable/api/vllm/sampling_params/#vllm.sampling_params.SamplingParams

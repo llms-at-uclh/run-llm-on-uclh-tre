@@ -13,7 +13,6 @@
 model:
   model: ./models/Qwen3-0.6B
   dtype: float32   # CPU requires float32 (not float16)
-  trust_remote_code: true
 
 # Sampling settings — passed directly to vllm.SamplingParams()
 # Full parameter reference: https://docs.vllm.ai/en/stable/api/vllm/sampling_params/#vllm.sampling_params.SamplingParams

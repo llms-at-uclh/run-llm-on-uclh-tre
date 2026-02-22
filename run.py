@@ -2,8 +2,8 @@
 run.py — Run a local LLM over a CSV file using vLLM offline batch inference.
 
 Usage:
-    python run.py --input data/myfile.csv
-    python run.py --input data/myfile.csv --dry-run
+    python run.py --input data/myfile.csv --config config.yaml
+    python run.py --input data/myfile.csv --config config.yaml --dry-run
 """
 
 import argparse
