@@ -1,3 +1,18 @@
+# ─── Project-specific ───────────────────────────────────────────────────────
+# Inference outputs (can be very large)
+outputs/
+models/*
+!models/.gitkeep
+
+# Real patient data must never be committed
+data/*.csv
+!data/example_input.csv
+
+# Python virtual environment
+.venv/
+venv/
+
+# ─── Python ──────────────────────────────────────────────────────────────────
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

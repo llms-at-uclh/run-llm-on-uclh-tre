@@ -1,0 +1,27 @@
+# Local testing config — CPU only, uses a tiny model.
+# Use this to verify your prompt/code/dataflow looks correct before running on the TRE.
+#
+# Usage:
+#   python run.py --input data/example_input.csv --config config/cpu.yaml
+#
+# Download a tiny model first:
+#   pip install huggingface-hub
+#   huggingface-cli download Qwen/Qwen3-0.6B--local-dir ./models/Qwen3-0.6B
+
+# Model settings — passed directly to vllm.LLM()
+# Full parameter reference: https://docs.vllm.ai/en/stable/api/vllm/#vllm.LLM
+model:
+  model: ./models/Qwen3-0.6B
+  dtype: float32   # CPU requires float32 (not float16)
+  trust_remote_code: true
+
+# Sampling settings — passed directly to vllm.SamplingParams()
+# Full parameter reference: https://docs.vllm.ai/en/stable/api/vllm/sampling_params/#vllm.sampling_params.SamplingParams
+sampling:
+  temperature: 0.0
+  max_tokens: 256
+  top_p: 1.0
+  top_k: -1
+  repetition_penalty: 1.0
+  seed: 42
+  stop: []
