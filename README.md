@@ -2,13 +2,22 @@
 
 Run a local large language model (LLM) over a CSV of clinical text using [vLLM](https://docs.vllm.ai/) offline batch inference. Designed for use in the Azure Trusted Research Environment (TRE) directly on the virtual machine (not via Azure ML).
 
+---
+
+## How to use this repository for your own projects
+
+Since this repository is designed as a starting point, the best way to use it depends on your goals:
+
+- **For a specific research project:** We recommend **forking** this repository. This allows you to safely modify `prompt.py`, `config.yaml`, and add your own data processing scripts for your specific use case, whilst maintaining your own version control history. If you use this code in your research, please cite this repository!
+- **For core improvements:** If you fix a bug, add a generally useful feature to `run.py`, or improve the documentation, we would love for you to **contribute** it back to the main repository via a Pull Request (see the Contributing section below).
+
 ### Non-computer scientists
 
 There are two main "levers" to control via this setup
 1. The prompt in `prompt.py`
 2. The model and sampling parameters in `config.yaml`
 
-Initally, it is highly recommend to 
+Initally, it is highly recommend to
 1. Get familiar with the codebase by installing and running it locally on your laptop, using the `--dry-run` flag [here](#step-6-run). This will print the first prompt to the console without loading the model allowing for easy debugging and prompt iteration.
 2. Read the vLLM docs for [LLMs](https://docs.vllm.ai/en/latest/api/vllm/#vllm.LLM) and [SamplingParams](https://docs.vllm.ai/en/latest/api/vllm/#vllm.SamplingParams)
 3. Then follow the steps below to run it in the TRE
@@ -154,3 +163,22 @@ Results are saved to `outputs/<timestamp>/`. This folder contains:
 
 **"Input CSV is missing required column(s)"**
 > Column names must be exactly `id` and `text` (lowercase).
+
+---
+
+## Contributing
+
+Contributions are welcome! If you are modifying the code or documentation, please follow these steps:
+
+1. **Pre-commit hooks**: We use `pre-commit` to maintain code formatting and quality. Please install it and set up the hooks before committing your changes:
+   ```bash
+   pip install pre-commit
+   pre-commit install
+   ```
+
+2. **Updating requirements**: If you add or update any dependencies, please update the `requirements.txt` file. Note that we use `pip` for this project:
+   ```bash
+   pip freeze > requirements.txt
+   ```
+
+3. **Spelling**: Please use British English spelling for any documentation, guides, or comments (e.g. "programme", "summarise", "contributing").

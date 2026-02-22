@@ -33,5 +33,8 @@ def build_messages(text: str) -> list[dict]:
     """
     return [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": f"Please summarise the following clinical note:\n\n{text}"},
+        {
+            "role": "user",
+            "content": f"Please summarise the following clinical note:\n\n{text}",
+        },
     ]

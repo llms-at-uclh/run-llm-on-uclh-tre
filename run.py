@@ -54,7 +54,8 @@ def validate_csv(path: Path) -> pd.DataFrame:
     if missing:
         sys.exit(
             f"Error: Input CSV is missing required column(s): {', '.join(sorted(missing))}\n"
-            f"Expected columns: '{', '.join(sorted(REQUIRED_COLUMNS))}'. Found: {', '.join(df.columns.tolist())}"
+            f"Expected columns: '{', '.join(sorted(REQUIRED_COLUMNS))}'. "
+            f"Found: {', '.join(df.columns.tolist())}"
         )
 
     if df.empty:
@@ -149,9 +150,13 @@ def main() -> None:
 
     # 4. Dry-run: print the first prompt and exit.
     if args.dry_run:
-        print("\n─── DRY RUN — first prompt ───────────────────────────────────────────────\n")
+        print(
+            "\n─── DRY RUN — first prompt ───────────────────────────────────────────────\n"
+        )
         print(format_conversation(conversations[0]))
-        print("\n─────────────────────────────────────────────────────────────────────────")
+        print(
+            "\n─────────────────────────────────────────────────────────────────────────"
+        )
         print("Dry run complete. No model was loaded. Exiting.")
         return
 
@@ -163,7 +168,7 @@ def main() -> None:
     # 6. Load the model.
     sampling_params = SamplingParams(**cfg["sampling"])
     llm = load_model(cfg["model"])
-    
+
     # 7. Run inference — vLLM applies the chat template internally via llm.chat().
     print(f"Running inference on {len(df)} rows...")
     try:
