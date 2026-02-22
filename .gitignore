@@ -1,5 +1,6 @@
 # ─── Project-specific ───────────────────────────────────────────────────────
 # Inference outputs (can be very large)
+.agents/
 outputs/
 models/*
 !models/.gitkeep
