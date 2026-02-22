@@ -2,7 +2,30 @@
 
 This repo is our current best practice for running a local large language model (LLM) on a batch of clinical text in the UCLH TRE.
 
-![Data flow diagram](./figures/data_flow.svg)
+## Projects Using This Code
+
+*(List of projects will be added here...)*
+
+If you use this repository for your research, please let us know so we can add your project to this list!
+
+---
+
+## Table of Contents
+
+- [Getting Started](#getting-started)
+- [Repository Layout](#repository-layout)
+- [Workflow Steps](#workflow-steps)
+  - [1. Install dependencies](#1-install-dependencies)
+  - [2. Download a model (in the TRE)](#2-download-a-model-in-the-tre)
+  - [3. Configure the run](#3-configure-the-run)
+  - [4. Prepare your input CSV](#4-prepare-your-input-csv)
+  - [5. Run the pipeline](#5-run-the-pipeline)
+- [Outputs](#outputs)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [Projects Using This Code](#projects-using-this-code)
+- [Citation and Acknowledgements](#citation-and-acknowledgements)
+- [Contact](#contact)
 
 ---
 
@@ -30,6 +53,9 @@ run-llm-on-uclh-tre/
 │   └── example_input.csv ← Example input file
 └── outputs/              ← Created automatically when you run the script
 ```
+
+![Data flow diagram](./figures/data_flow.svg)
+
 
 ---
 
@@ -117,3 +143,29 @@ Contributions are welcome! If you are modifying the code or documentation, pleas
    pip freeze > requirements.txt
    ```
 3. **Spelling:** Please use British English spelling for all documentation, guides, or comments (e.g., "programme", "summarise", "colour").
+
+---
+
+## Citation and Acknowledgements
+
+If you use this code in your work, please acknowledge it. We recommend citing it as follows:
+
+```bibtex
+@misc{run-llm-on-uclh-tre,
+  author = {Simon Ellershaw},
+  title = {Run LLM on UCLH TRE},
+  year = {2026},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/llms-at-uclh/run-llm-on-uclh-tre}}
+}
+```
+
+---
+
+## Contact
+
+For questions, support, or to notify us that you are using this code, please contact:
+
+- <simon.ellershaw.20@ucl.ac.uk>
+- Or simply open an Issue or Pull Request in this repository!
