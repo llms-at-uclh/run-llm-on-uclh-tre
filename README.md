@@ -2,6 +2,8 @@
 
 Run a local large language model (LLM) over a CSV of clinical text using [vLLM](https://docs.vllm.ai/) offline batch inference. Designed for use in the Azure Trusted Research Environment (TRE) directly on the virtual machine (not via Azure ML).
 
+![Data flow diagram](./figures/data_flow.svg)
+
 ---
 
 ## How to use this repository for your own projects
