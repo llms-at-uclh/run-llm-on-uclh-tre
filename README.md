@@ -138,9 +138,9 @@ Contributions are welcome! If you are modifying the code or documentation, pleas
    pip install pre-commit
    pre-commit install
    ```
-2. **Updating requirements:** Use `pip` to update `requirements.txt` if you add or alter dependencies:
+2. **Updating requirements:** We use `pip-tools` to manage dependencies. If you add or alter top-level dependencies, update `requirements.in` and run:
    ```bash
-   pip freeze > requirements.txt
+   pip-compile requirements.in
    ```
 3. **Spelling:** Please use British English spelling for all documentation, guides, or comments (e.g., "programme", "summarise", "colour").
 

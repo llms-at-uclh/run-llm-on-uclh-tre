@@ -62,9 +62,7 @@ def curve_arrow(x1, y1, cx, cy, x2, y2, color="#000"):
     return curve + "\n" + head1 + "\n" + head2
 
 
-def text(
-    x, y, content, font_size=20, font_weight="normal", anchor="start", fill="#1e1e1e"
-):
+def text(x, y, content, font_size=20, font_weight="normal", anchor="start", fill="#1e1e1e"):
     return (
         f'<text x="{x}" y="{y}" '
         f"font-family=\"'Caveat', 'Virgil', 'Comic Sans MS', cursive\" "
@@ -95,9 +93,7 @@ svg.append(
 )
 
 # Engine Box
-svg.append(
-    rough_rect(380, 200, 240, 260, fill="#f3e8ff", stroke="#6b21a8", stroke_width=3)
-)
+svg.append(rough_rect(380, 200, 240, 260, fill="#f3e8ff", stroke="#6b21a8", stroke_width=3))
 svg.append(
     text(
         500,
@@ -117,9 +113,7 @@ svg.append(text(500, 395, "2. Format Prompts", font_size=20, anchor="middle"))
 svg.append(text(500, 425, "3. Generate Text", font_size=20, anchor="middle"))
 
 # Inputs
-svg.append(
-    rough_rect(60, 140, 240, 110, fill="#eff6ff", stroke="#1d4ed8", stroke_width=2)
-)
+svg.append(rough_rect(60, 140, 240, 110, fill="#eff6ff", stroke="#1d4ed8", stroke_width=2))
 svg.append(
     text(
         180,
@@ -134,9 +128,7 @@ svg.append(
 svg.append(text(180, 220, "data/example_input.csv", font_size=20, anchor="middle"))
 svg.append(text(180, 240, "(id, text)", font_size=16, anchor="middle"))
 
-svg.append(
-    rough_rect(60, 290, 240, 120, fill="#fefce8", stroke="#a16207", stroke_width=2)
-)
+svg.append(rough_rect(60, 290, 240, 120, fill="#fefce8", stroke="#a16207", stroke_width=2))
 svg.append(
     text(
         180,
@@ -151,9 +143,7 @@ svg.append(
 svg.append(text(180, 365, "config.yaml", font_size=20, anchor="middle"))
 svg.append(text(180, 395, "prompt.py", font_size=20, anchor="middle"))
 
-svg.append(
-    rough_rect(60, 450, 240, 100, fill="#fdf2f8", stroke="#be185d", stroke_width=2)
-)
+svg.append(rough_rect(60, 450, 240, 100, fill="#fdf2f8", stroke="#be185d", stroke_width=2))
 svg.append(
     text(
         180,
@@ -173,9 +163,7 @@ svg.append(curve_arrow(310, 350, 340, 350, 375, 330, color="#a16207"))
 svg.append(curve_arrow(310, 500, 350, 500, 375, 430, color="#be185d"))
 
 # Outputs
-svg.append(
-    rough_rect(700, 220, 260, 220, fill="#f0fdf4", stroke="#15803d", stroke_width=2)
-)
+svg.append(rough_rect(700, 220, 260, 220, fill="#f0fdf4", stroke="#15803d", stroke_width=2))
 svg.append(
     text(
         830,

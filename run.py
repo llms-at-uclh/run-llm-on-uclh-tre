@@ -9,6 +9,7 @@ Usage:
 import argparse
 import shutil
 import sys
+import traceback
 from datetime import datetime
 from pathlib import Path
 
@@ -18,7 +19,6 @@ from tqdm import tqdm
 from vllm import LLM, SamplingParams
 
 from prompt import build_messages
-
 
 # ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -104,6 +104,7 @@ def load_model(model_cfg: dict) -> LLM:
             )
         sys.exit(f"Error: Failed to load model.\nDetails: {e}")
     except Exception as e:
+        traceback.print_exc()
         sys.exit(f"Error: Failed to load model.\nDetails: {e}")
 
     return llm
@@ -113,9 +114,7 @@ def load_model(model_cfg: dict) -> LLM:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Run a local LLM over a CSV file using vLLM offline batch inference."
-    )
+    parser = argparse.ArgumentParser(description="Run a local LLM over a CSV file using vLLM offline batch inference.")
     parser.add_argument(
         "--input",
         required=True,
@@ -145,18 +144,14 @@ def main() -> None:
     # 3. Build all message lists with a progress bar.
     print("Formatting prompts...")
     conversations = []
-    for text in tqdm(df["text"].astype(str), unit="row"):
+    for text in tqdm(df["text"].fillna("").astype(str), unit="row"):
         conversations.append(build_messages(text))
 
     # 4. Dry-run: print the first prompt and exit.
     if args.dry_run:
-        print(
-            "\n─── DRY RUN — first prompt ───────────────────────────────────────────────\n"
-        )
+        print("\n─── DRY RUN — first prompt ───────────────────────────────────────────────\n")
         print(format_conversation(conversations[0]))
-        print(
-            "\n─────────────────────────────────────────────────────────────────────────"
-        )
+        print("\n─────────────────────────────────────────────────────────────────────────")
         print("Dry run complete. No model was loaded. Exiting.")
         return
 
@@ -178,6 +173,7 @@ def main() -> None:
             use_tqdm=True,
         )
     except Exception as e:
+        traceback.print_exc()
         sys.exit(f"Error: Inference failed.\nDetails: {e}")
 
     # 8. Extract generated text and write output CSV.
@@ -185,7 +181,7 @@ def main() -> None:
     df["output"] = [out.outputs[0].text.strip() for out in outputs]
 
     out_path = out_dir / args.input.name
-    df[["id", "text", "prompt", "output"]].to_csv(out_path, index=False)
+    df.to_csv(out_path, index=False)
 
     print(f"\nDone. Results saved to: {out_path}")
 
