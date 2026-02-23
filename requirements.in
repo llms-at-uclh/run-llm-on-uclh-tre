@@ -1,6 +1,5 @@
 pandas
 pyyaml
 tqdm
-pre-commit
 torch
 transformers

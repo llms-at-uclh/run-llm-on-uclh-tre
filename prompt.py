@@ -35,6 +35,6 @@ def build_messages(text: str) -> list[dict]:
         {"role": "system", "content": SYSTEM_PROMPT},
         {
             "role": "user",
-            "content": f"Please summarise the following clinical note:\n\n{text}",
+            "content": f"Please summarise the following clinical note:\n\n{text}",  # noqa: E501
         },
     ]
