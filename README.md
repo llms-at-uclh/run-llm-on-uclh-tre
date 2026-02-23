@@ -1,8 +1,11 @@
 # Run LLM on UCLH TRE
 
-This repo is our current best practice for running a local large language model (LLM) on a batch of clinical text in the UCLH TRE.
+This repo is our current best practice for running a local large language model (LLM) on a batch of clinical text in the UCLH TRE using Hugging Face transformers.
 
-## Projects Using This Code
+![Data flow diagram](./figures/data_flow.svg)
+
+
+**Projects Using This Code**
 
 *(List of projects will be added here...)*
 
@@ -12,32 +15,20 @@ If you use this repository for your research, please let us know so we can add y
 
 ## Table of Contents
 
-- [Getting Started](#getting-started)
 - [Repository Layout](#repository-layout)
+- [Getting Started](#getting-started)
 - [Workflow Steps](#workflow-steps)
   - [1. Install dependencies](#1-install-dependencies)
-  - [2. Download a model (in the TRE)](#2-download-a-model-in-the-tre)
-  - [3. Configure the run](#3-configure-the-run)
-  - [4. Prepare your input CSV](#4-prepare-your-input-csv)
-  - [5. Run the pipeline](#5-run-the-pipeline)
+  - [2. Prepare your input CSV](#2-prepare-your-input-csv)
+  - [3. Iterate on your prompt](#3-iterate-on-your-prompt)
+  - [4. Choose a model](#4-choose-a-model)
+  - [5. Configure the run](#5-configure-the-run)
+  - [6. Run the pipeline](#6-run-the-pipeline)
 - [Outputs](#outputs)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
-- [Projects Using This Code](#projects-using-this-code)
 - [Citation and Acknowledgements](#citation-and-acknowledgements)
 - [Contact](#contact)
-
----
-
-## Getting Started
-
-This repository is a starting point. We recommend **forking** it for your own research projects to safely modify prompts and configurations while maintaining version control. If you fix a bug, improve documentation, or add a generally useful feature to `run.py`, please **contribute** it back via a Pull Request.
-
-**If you are new to this:**
-1. Clone the repository to your local machine for prompt development.
-2. Use the `--dry-run` flag to test your prompts without needing a GPU or downloading a model.
-3. Read the vLLM docs for [LLMs](https://docs.vllm.ai/en/latest/api/vllm/#vllm.LLM) and [SamplingParams](https://docs.vllm.ai/en/latest/api/vllm/#vllm.SamplingParams) to understand the configuration options.
-4. Follow the workflow steps below to run it in the TRE.
 
 ---
 
@@ -45,19 +36,40 @@ This repository is a starting point. We recommend **forking** it for your own re
 
 ```text
 run-llm-on-uclh-tre/
-├── config.yaml           ← Model configuration (model path, parameters)
-├── prompt.py             ← Edit this: what you want the model to do
-├── run.py                ← Main script (do not edit unless required)
-├── requirements.txt      ← Python dependencies
+├── config/               ← Environment-specific configurations
+│   ├── cpu.yaml          ← Use this for local CPU testing
+│   ├── t4.yaml           ← Use this for T4 GPUs in the TRE
+│   └── a100.yaml         ← Use this for A100 GPUs in the TRE
+├── prompt.py             ← Edit this: define your system and user
+├── run.py                ← Main script for inference
+├── requirements.in       ← Top-level dependencies
+├── requirements.txt      ← Compiled dependencies
 ├── data/
 │   └── example_input.csv ← Example input file
 └── outputs/              ← Created automatically when you run the script
 ```
 
-![Data flow diagram](./figures/data_flow.svg)
-
+The config directory has the best "current" models that we have got working in each environment. This changes rapidly, so if you get a better model working please update the config (see [contributing](#contributing))!!
 
 ---
+
+## Getting Started
+
+This repository is a starting point. We recommend **forking** it for your own research projects to safely modify prompts and configurations while maintaining version control. If you fix a bug, improve documentation, or add a generally useful feature to `run.py`, please **contribute** it back via a Pull Request.
+
+It is highly recommended to run the pipeline on your local machine first to test the prompt and configuration before moving to the TRE. This saves TRE costs and local development is much faster and easier!
+
+**If you are new to this:**
+- Highly recommend reading the following docs
+  -  SAFEHR TRE docs: [README.md](https://github.com/SAFEHR-data/safehr-data-service-catalogue/blob/main/User-Guides/TRE/README.md) and [llm-vms.md](https://github.com/SAFEHR-data/safehr-data-service-catalogue/blob/main/User-Guides/TRE/llm-vms.md)
+  - Hugging Face: [Pipelines](https://huggingface.co/docs/transformers/en/main_classes/pipelines) and [Text Generation](https://huggingface.co/docs/transformers/en/main_classes/pipelines#transformers.TextGenerationPipeline) to understand the configuration options.
+- Clone the repository to your local machine for prompt development.
+- Follow the steps below and use `./config/cpu.yaml` to run the pipeline on your local machine.
+  - Use dummy data to test the pipeline (LLMs are great at creating this, see `data/example_input.csv` for an example).
+  - Using `--dry-run` flag will let you refine the prompt by printing the first example.
+- Move the setup to the TRE and run the pipeline on your real data, GPUs and better models!
+  - Robust way to do this is to zip the repo and upload it to the TRE.
+  - Quick way to do this is to copy and paste files across...
 
 ## Workflow Steps
 
@@ -70,45 +82,58 @@ python -m venv .venv
 source .venv/bin/activate       # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
-> **TRE Note:** Packages are installed from the internal Nexus mirror. Contact your TRE administrator to request missing packages.
 
-### 2. Download a model (in the TRE)
+### 2. Prepare your input CSV
 
-Check the airlock to see if the model is already available. If not, download it from Hugging Face on a machine with internet access, zip the folder, and upload it to the airlock:
+By default your input file must contain at least two columns with lowercase headers: `id` and `text`. See `data/example_input.csv` for an example.
+
+### 3. Iterate on your prompt
+
+Edit `prompt.py` to define the `SYSTEM_PROMPT` and the `build_messages` function. Use `{text}` to insert content from the CSV row.
+
+Use the `--dry-run` flag to test the pipeline on your local machine.
+
+### 4. Choose a model
+
+### Locally
+
+Download a small model to test with (we have had success with `Qwen/Qwen3-0.6B`):
+
+```bash
+pip install huggingface-cli
+huggingface-cli download Qwen/Qwen3-0.6B --local-dir ./models/Qwen3-0.6B
+```
+
+### In the TRE
+
+Check the airlock to see if the model is already available.
+
+If not, download it from Hugging Face on a machine with internet access, zip the folder, and upload it to the airlock:
 
 ```bash
 huggingface-cli download <HUGGING_FACE_MODEL> --local-dir ./models/<MODEL_NAME>
 zip -r ./models/<MODEL_NAME>.zip ./models/<MODEL_NAME>
 ```
 Follow the [SAFEHR docs](https://github.com/SAFEHR-data/safehr-data-service-catalogue/blob/main/User-Guides/TRE/import-data-to-the-TRE-workspace.md#import-data-to-the-tre-workspace) to import the zipped data to your virtual machine in the TRE.
+- TIP: If using UCL Wi-Fi, Eduroam blocks uploads to airlock (we think due to firewalls) so use UCL Guest network instead.
 
-### 3. Configure the run
+### 5. Configure the run
 
-Update `config.yaml` with the absolute path to your model directory:
-```yaml
-model:
-  model: /path/to/your/model
-```
+Select and update the appropriate configuration file from the `config/` directory. You may want to consider parameters such as:
+- Generation parameters such as temperature (the model docs usually recommend values)
+- Max input and output lengths
+- Diving into the full [generation config](https://huggingface.co/docs/transformers/en/main_classes/text_generation#transformers.GenerationConfig) for all the options
 
-Edit `prompt.py` to define the `SYSTEM_PROMPT` and user messages. Use `{text}` to insert content from the CSV row:
-```python
-{"role": "user", "content": f"Summarise the following:\n\n{text}"}
-```
-
-### 4. Prepare your input CSV
-
-Your input file must contain exactly two columns with lowercase headers: `id` and `text`. See `data/example_input.csv` for an example.
-
-### 5. Run the pipeline
+### 6. Run the pipeline
 
 **Local prompt preview (no GPU or model required):**
 ```bash
-python run.py --input data/example_input.csv --config config.yaml --dry-run
+python run.py --input data/example_input.csv --config config/cpu.yaml --dry-run
 ```
 
 **Full job (in the TRE with GPU):**
 ```bash
-python run.py --input data/example_input.csv --config config.yaml
+python run.py --input data/example_input.csv --config config/a100.yaml
 ```
 
 ---
@@ -116,16 +141,21 @@ python run.py --input data/example_input.csv --config config.yaml
 ## Outputs
 
 Results are saved to `outputs/<timestamp>/`, containing:
-- `<your_filename>.csv` — your original data plus `prompt` and `output` columns representing the model's response.
-- `config.yaml` — an exact copy of the configuration used for auditability.
+- `<input_filename>.csv` — original data plus `output` column (can be exported and viewed in Excel).
+- `<input_filename>.json` — results in JSON format (nice to look at as code in your IDE).
+- `config.yaml` — copy of the configuration used.
+- `prompt.py` — copy of the prompt definition used.
+- `cli_args.json` — record of the command-line arguments.
+
+The idea is that you can reproduce the exact same results at a later date by using the same config and prompt files.
 
 ---
 
 ## Troubleshooting
 
-- **Out of memory:** Reduce `model.gpu_memory_utilization` in `config.yaml` (e.g., to `0.7`) or use a quantized model.
-- **Model directory not found:** Check `model.model` in `config.yaml` is the correct absolute path.
-- **Input CSV is missing required column(s):** Ensure column names are exactly `id` and `text` (lowercase).
+- **Out of memory:** Reduce `batch_size` in your config file (e.g., `config/t4.yaml`) or use a smaller/quantized model.
+- **Model directory not found:** Check the `model` path in your config file.
+- **Input CSV missing columns:** Ensure column names are exactly `id` and `text` (lowercase).
 
 ---
 
@@ -140,9 +170,19 @@ Contributions are welcome! If you are modifying the code or documentation, pleas
    ```
 2. **Updating requirements:** We use `pip-tools` to manage dependencies. If you add or alter top-level dependencies, update `requirements.in` and run:
    ```bash
+   pip install pip-tools
    pip-compile requirements.in
    ```
-3. **Spelling:** Please use British English spelling for all documentation, guides, or comments (e.g., "programme", "summarise", "colour").
+3. **Spelling:** Please use British English spelling for all documentation and comments (e.g., "programme", "summarise", "colour").
+
+Open a PR (including adding yourself to the citation if you like) and we will merge it in!
+
+### Future Work
+
+- Are there better ways to run LLMs in the TRE? (e.g. vLLM, ollama etc...)
+- Run a quantized model
+- Add explanation on expected max context windows
+- Add support for tools, structured outputs etc
 
 ---
 
@@ -169,3 +209,5 @@ For questions, support, or to notify us that you are using this code, please con
 
 - <simon.ellershaw.20@ucl.ac.uk>
 - Or simply open an Issue or Pull Request in this repository!
+
+If anything isn't clear, please don't hesitate to ask so we can improve the documentation!
