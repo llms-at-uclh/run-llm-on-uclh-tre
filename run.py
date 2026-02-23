@@ -1,22 +1,19 @@
 """
-run.py — Run a local LLM over a CSV file using vLLM offline batch inference.
-
-Usage:
-    python run.py --input data/myfile.csv --config config.yaml
-    python run.py --input data/myfile.csv --config config.yaml --dry-run
+run.py — Run a local LLM over a CSV file using Hugging Face pipelines.
 """
 
 import argparse
+import json
+import os
 import shutil
 import sys
-import traceback
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 import yaml
 from tqdm import tqdm
-from vllm import LLM, SamplingParams
+from transformers import pipeline
 
 from prompt import build_messages
 
@@ -31,37 +28,38 @@ REQUIRED_COLUMNS = {"id", "text"}
 def load_config(path: Path) -> dict:
     """Load a YAML config file."""
     if not path.exists():
-        sys.exit(f"Error: Config file not found at {path}")
+        raise FileNotFoundError(f"Config file not found at {path}")
     with path.open() as f:
         return yaml.safe_load(f)
 
 
 def validate_csv(path: Path) -> pd.DataFrame:
     """
-    Load and validate the input CSV. Exits immediately with a clear message
+    Load and validate the input CSV. Raises an exception with a clear message
     if the file is missing or lacks the required columns — before any model
     loading occurs.
     """
-    if not path.exists():
-        sys.exit(f"Error: Input file not found: {path}")
-
-    try:
-        df = pd.read_csv(path)
-    except Exception as e:
-        sys.exit(f"Error: Could not read CSV file '{path}'.\nDetails: {e}")
+    df = pd.read_csv(path)
 
     missing = REQUIRED_COLUMNS - set(df.columns)
     if missing:
-        sys.exit(
-            f"Error: Input CSV is missing required column(s): {', '.join(sorted(missing))}\n"
+        raise ValueError(
+            "Input CSV is missing required column(s): "
+            f"{', '.join(sorted(missing))}\n"
             f"Expected columns: '{', '.join(sorted(REQUIRED_COLUMNS))}'. "
             f"Found: {', '.join(df.columns.tolist())}"
         )
 
     if df.empty:
-        sys.exit("Error: Input CSV has no rows.")
+        raise ValueError("Input CSV has no rows.")
 
     return df
+
+
+def print_sample_messages(messages: list[dict]) -> None:
+    """Print a sample of messages."""
+    for message in messages:
+        print(f"<{message['role']}>\n{message['content']}\n\n")
 
 
 def create_output_dir() -> Path:
@@ -72,118 +70,65 @@ def create_output_dir() -> Path:
     return out_dir
 
 
-def format_conversation(conv: list[dict]) -> str:
-    """Serialise a chat conversation to a human-readable string."""
-    return "\n\n".join(f"[{m['role'].upper()}]\n{m['content']}" for m in conv)
-
-
-def load_model(model_cfg: dict) -> LLM:
-    """Load the vLLM model. Provides friendly error messages for common failures."""
-    model_path = model_cfg.get("model")
-
-    if not model_path:
-        sys.exit("Error: 'model.model' is not set in config.yaml.")
-
-    if not Path(model_path).exists():
-        sys.exit(
-            f"Error: Model directory not found: {model_path}\n"
-            "Please check that 'model.model' in config.yaml points to the correct location."
-        )
-
-    print(f"Loading model from: {model_path}")
-    print("This may take several minutes for large models...")
-
-    try:
-        llm = LLM(**model_cfg)
-    except RuntimeError as e:
-        if "out of memory" in str(e).lower():
-            sys.exit(
-                "Error: GPU ran out of memory while loading the model.\n"
-                "Try reducing 'model.gpu_memory_utilization' in config.yaml, "
-                "or use a quantized model (set 'model.quantization' to e.g. 'awq')."
-            )
-        sys.exit(f"Error: Failed to load model.\nDetails: {e}")
-    except Exception as e:
-        traceback.print_exc()
-        sys.exit(f"Error: Failed to load model.\nDetails: {e}")
-
-    return llm
-
-
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run a local LLM over a CSV file using vLLM offline batch inference.")
-    parser.add_argument(
-        "--input",
-        required=True,
-        type=Path,
-        help=f"Path to input CSV file (must have {sorted(REQUIRED_COLUMNS)} columns).",
-    )
-    parser.add_argument(
-        "--config",
-        required=True,
-        type=Path,
-        help="Path to config YAML file.",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Format and print the first prompt, then exit without loading the model.",
-    )
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", required=True, type=Path)
+    parser.add_argument("--config", required=True, type=Path)
+    parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
-    # 1. Validate CSV immediately — before loading config or model.
-    df = validate_csv(args.input)
-    print(f"Input CSV loaded: {len(df)} rows")
+    try:
+        df = validate_csv(args.input)
+        cfg = load_config(args.config)
+    except (FileNotFoundError, ValueError) as e:
+        sys.exit(f"Error: {e}")
 
-    # 2. Load config.
-    cfg = load_config(args.config)
+    tqdm.pandas(desc="Building prompts")
+    df["messages"] = df["text"].progress_apply(build_messages)
 
-    # 3. Build all message lists with a progress bar.
-    print("Formatting prompts...")
-    conversations = []
-    for text in tqdm(df["text"].fillna("").astype(str), unit="row"):
-        conversations.append(build_messages(text))
-
-    # 4. Dry-run: print the first prompt and exit.
     if args.dry_run:
-        print("\n─── DRY RUN — first prompt ───────────────────────────────────────────────\n")
-        print(format_conversation(conversations[0]))
-        print("\n─────────────────────────────────────────────────────────────────────────")
-        print("Dry run complete. No model was loaded. Exiting.")
+        print("\nDRY RUN — first prompt\n")
+        print_sample_messages(df["messages"].iloc[0])
         return
 
-    # 5. Create output directory and copy config for audit trail.
+    print("Loading pipeline...")
+    pipe_kwargs = cfg.get("pipeline", {})
+    if "num_workers" not in pipe_kwargs:
+        pipe_kwargs["num_workers"] = os.cpu_count() or 1
+    pipe = pipeline("text-generation", **pipe_kwargs)
+    # Make sure tokenizer is set up correctly
+    if pipe.tokenizer.pad_token is None:
+        pipe.tokenizer.pad_token = pipe.tokenizer.eos_token
+    pipe.tokenizer.padding_side = "left"
+
+    # We pass messages as a generator so the pipeline yields outputs iteratively
+    df["output"] = [
+        output[0]["generated_text"]
+        for output in tqdm(
+            pipe((msg for msg in df["messages"]), **cfg.get("generation", {})),
+            total=len(df),
+            desc="Generating responses",
+        )
+    ]
+
+    print("Saving outputs...")
     out_dir = create_output_dir()
     shutil.copy(args.config, out_dir / args.config.name)
-    print(f"Output directory: {out_dir}")
+    shutil.copy(Path(__file__).parent / "prompt.py", out_dir / "prompt.py")
+    (out_dir / "cli_args.json").write_text(
+        json.dumps({k: str(v) for k, v in vars(args).items()}, indent=4)
+    )
 
-    # 6. Load the model.
-    sampling_params = SamplingParams(**cfg["sampling"])
-    llm = load_model(cfg["model"])
+    out_csv = out_dir / args.input.name
+    out_json = out_csv.with_suffix(".json")
 
-    # 7. Run inference — vLLM applies the chat template internally via llm.chat().
-    print(f"Running inference on {len(df)} rows...")
-    try:
-        outputs = llm.chat(
-            messages=conversations,
-            sampling_params=sampling_params,
-            use_tqdm=True,
-        )
-    except Exception as e:
-        traceback.print_exc()
-        sys.exit(f"Error: Inference failed.\nDetails: {e}")
+    df.to_csv(out_csv, index=False)
+    df.to_json(out_json, orient="records", indent=4)
 
-    # 8. Extract generated text and write output CSV.
-    df["prompt"] = [format_conversation(conv) for conv in conversations]
-    df["output"] = [out.outputs[0].text.strip() for out in outputs]
-
-    out_path = out_dir / args.input.name
-    df.to_csv(out_path, index=False)
-
-    print(f"\nDone. Results saved to: {out_path}")
+    print(f"Outputs saved to: {out_dir}")
 
 
 if __name__ == "__main__":

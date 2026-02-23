@@ -1,19 +1,21 @@
-# Model settings — passed directly to vllm.LLM()
-# Full parameter reference: https://docs.vllm.ai/en/stable/api/vllm/#vllm.LLM
-model:
+pipeline:
+  # https://huggingface.co/docs/transformers/en/main_classes/pipelines#transformers.TextGenerationPipeline
   model: ./models/Qwen3-0.6B
-  quantization: null
+  num_workers: 1
+  batch_size: 1
+  device: cuda:0
   dtype: float16
-  max_model_len: 1024
-  gpu_memory_utilization: 0.8
 
-# Sampling settings — passed directly to vllm.SamplingParams()
-# Full parameter reference: https://docs.vllm.ai/en/stable/api/vllm/sampling_params/#vllm.sampling_params.SamplingParams
-sampling:
-  temperature: 0.0
-  max_tokens: 512
-  top_p: 1.0
-  top_k: -1
-  repetition_penalty: 1.0
-  seed: 42
-  stop: []
+chat_template:
+  # https://huggingface.co/docs/transformers/internal/tokenization_utils#transformers.PreTrainedTokenizerBase.apply_chat_template
+  add_generation_prompt: true
+  tokenize: false
+
+generation:
+  # https://huggingface.co/docs/transformers/en/main_classes/pipelines#transformers.TextGenerationPipeline.__call__
+  return_full_text: false # Only return the generated text, not the prompt
+  clean_up_tokenization_spaces: True
+  # https://huggingface.co/docs/transformers/en/main_classes/text_generation#transformers.GenerationConfig
+  max_new_tokens: 64
+  use_cache: true
+  temperature: 0.7
