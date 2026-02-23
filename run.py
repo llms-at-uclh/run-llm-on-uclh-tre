@@ -4,11 +4,13 @@ run.py — Run a local LLM over a CSV file using Hugging Face pipelines.
 
 import argparse
 import json
+import logging
 import os
 import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import yaml
@@ -22,10 +24,28 @@ from prompt import build_messages
 OUTPUTS_DIR = Path(__file__).parent / "outputs"
 REQUIRED_COLUMNS = {"id", "text"}
 
+# ─── Global State ─────────────────────────────────────────────────────────────
+
+logger = logging.getLogger(__name__)
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 
-def load_config(path: Path) -> dict:
+def setup_logging(output_dir: Path | None = None) -> None:
+    """Set up logging to console and optionally to a file."""
+    handlers: list[logging.Handler] = [logging.StreamHandler(sys.stdout)]
+    if output_dir:
+        handlers.append(logging.FileHandler(output_dir / "run.log"))
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=handlers,
+    )
+
+
+def load_config(path: Path) -> dict[str, Any]:
     """Load a YAML config file."""
     if not path.exists():
         raise FileNotFoundError(f"Config file not found at {path}")
@@ -56,10 +76,10 @@ def validate_csv(path: Path) -> pd.DataFrame:
     return df
 
 
-def print_sample_messages(messages: list[dict]) -> None:
-    """Print a sample of messages."""
+def print_sample_messages(messages: list[dict[str, str]]) -> None:
+    """Print a sample of messages using the logger."""
     for message in messages:
-        print(f"<{message['role']}>\n{message['content']}\n\n")
+        logger.info("<%s>\n%s\n\n", message["role"], message["content"])
 
 
 def create_output_dir() -> Path:
@@ -80,30 +100,43 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
+    # Create output dir early if not a dry run so we can log to it
+    out_dir: Path | None = None
+    if not args.dry_run:
+        out_dir = create_output_dir()
+
+    setup_logging(out_dir)
+
     try:
         df = validate_csv(args.input)
         cfg = load_config(args.config)
     except (FileNotFoundError, ValueError) as e:
-        sys.exit(f"Error: {e}")
+        logger.error(e)
+        sys.exit(1)
 
     tqdm.pandas(desc="Building prompts")
     df["messages"] = df["text"].progress_apply(build_messages)
 
     if args.dry_run:
-        print("\nDRY RUN — first prompt\n")
+        logger.info("DRY RUN — first prompt")
         print_sample_messages(df["messages"].iloc[0])
         return
 
-    print("Loading pipeline...")
+    logger.info("Loading pipeline...")
     pipe_kwargs = cfg.get("pipeline", {})
     if "num_workers" not in pipe_kwargs:
         pipe_kwargs["num_workers"] = os.cpu_count() or 1
+    if "trust_remote_code" not in pipe_kwargs:
+        pipe_kwargs["trust_remote_code"] = False
+
     pipe = pipeline("text-generation", **pipe_kwargs)
+
     # Make sure tokenizer is set up correctly
     if pipe.tokenizer.pad_token is None:
         pipe.tokenizer.pad_token = pipe.tokenizer.eos_token
     pipe.tokenizer.padding_side = "left"
 
+    logger.info("Starting generation...")
     # We pass messages as a generator so the pipeline yields outputs iteratively
     df["output"] = [
         output[0]["generated_text"]
@@ -114,8 +147,10 @@ def main() -> None:
         )
     ]
 
-    print("Saving outputs...")
-    out_dir = create_output_dir()
+    logger.info("Saving outputs...")
+    # out_dir is guaranteed to be set if not args.dry_run
+    assert out_dir is not None
+
     shutil.copy(args.config, out_dir / args.config.name)
     shutil.copy(Path(__file__).parent / "prompt.py", out_dir / "prompt.py")
     (out_dir / "cli_args.json").write_text(
@@ -128,7 +163,7 @@ def main() -> None:
     df.to_csv(out_csv, index=False)
     df.to_json(out_json, orient="records", indent=4)
 
-    print(f"Outputs saved to: {out_dir}")
+    logger.info("Outputs saved to: %s", out_dir)
 
 
 if __name__ == "__main__":
