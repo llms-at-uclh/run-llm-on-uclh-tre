@@ -1,0 +1,15 @@
+pipeline:
+  # https://huggingface.co/docs/transformers/en/main_classes/pipelines#transformers.TextGenerationPipeline
+  model: ./models/Llama-3.1-8B-Instruct
+  device: cuda:0
+  dtype: float16
+  batch_size: 1
+
+generation:
+  # https://huggingface.co/docs/transformers/en/main_classes/pipelines#transformers.TextGenerationPipeline.__call__
+  return_full_text: false
+  clean_up_tokenization_spaces: True
+  # https://huggingface.co/docs/transformers/en/main_classes/text_generation#transformers.GenerationConfig
+  max_new_tokens: 64
+  use_cache: true
+  temperature: 0.7

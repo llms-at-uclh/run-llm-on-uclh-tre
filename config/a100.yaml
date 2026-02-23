@@ -1,0 +1,20 @@
+pipeline:
+  # https://huggingface.co/docs/transformers/en/main_classes/pipelines#transformers.TextGenerationPipeline
+  model: ./models/QwenQwQ-32B
+  device: cuda:0
+  dtype: bfloat16
+  batch_size: 1
+  num_workers: 1
+
+generation:
+  # https://huggingface.co/docs/transformers/en/main_classes/pipelines#transformers.TextGenerationPipeline.__call__
+  return_full_text: false
+  clean_up_tokenization_spaces: True
+  # https://huggingface.co/docs/transformers/en/main_classes/text_generation#transformers.GenerationConfig
+  max_new_tokens: 4096
+  use_cache: true
+  # https://huggingface.co/Qwen/QwQ-32B#usage-guidelines
+  temperature: 0.6
+  top_p: 0.95
+  min_p: 0
+  top_k: 40

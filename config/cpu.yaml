@@ -1,19 +1,13 @@
 pipeline:
   # https://huggingface.co/docs/transformers/en/main_classes/pipelines#transformers.TextGenerationPipeline
   model: ./models/Qwen3-0.6B
-  num_workers: 1
+  device: cpu
+  dtype: float32
   batch_size: 1
-  device: cuda:0
-  dtype: float16
-
-chat_template:
-  # https://huggingface.co/docs/transformers/internal/tokenization_utils#transformers.PreTrainedTokenizerBase.apply_chat_template
-  add_generation_prompt: true
-  tokenize: false
 
 generation:
   # https://huggingface.co/docs/transformers/en/main_classes/pipelines#transformers.TextGenerationPipeline.__call__
-  return_full_text: false # Only return the generated text, not the prompt
+  return_full_text: false
   clean_up_tokenization_spaces: True
   # https://huggingface.co/docs/transformers/en/main_classes/text_generation#transformers.GenerationConfig
   max_new_tokens: 64
