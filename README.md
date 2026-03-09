@@ -143,9 +143,10 @@ python run.py --input data/example_input.csv --config config/a100.yaml
 Results are saved to `outputs/<timestamp>/`, containing:
 - `<input_filename>.csv` — original data plus `output` column (can be exported and viewed in Excel).
 - `<input_filename>.json` — results in JSON format (nice to look at as code in your IDE).
-- `config.yaml` — copy of the configuration used.
+- `<config_name>.yaml` — copy of the configuration used (preserves the original filename).
 - `prompt.py` — copy of the prompt definition used.
 - `cli_args.json` — record of the command-line arguments.
+- `run.log` — log of the run.
 
 The idea is that you can reproduce the exact same results at a later date by using the same config and prompt files.
 
