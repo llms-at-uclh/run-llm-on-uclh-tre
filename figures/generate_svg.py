@@ -95,7 +95,7 @@ def text(
 
 svg = []
 svg.append(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 650" '
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" '
     'width="100%" height="100%" style="background-color: #ffffff;">'
 )
 svg.append(
@@ -134,14 +134,21 @@ svg.append(
     )
 )
 svg.append(
-    text(500, 285, "(vLLM Batch", font_size=22, anchor="middle", fill="#6b21a8")
+    text(
+        500,
+        285,
+        "(HF Text-Generation",
+        font_size=22,
+        anchor="middle",
+        fill="#6b21a8",
+    )
 )
 svg.append(
-    text(500, 310, "Inference)", font_size=22, anchor="middle", fill="#6b21a8")
+    text(500, 310, "Pipeline)", font_size=22, anchor="middle", fill="#6b21a8")
 )
 svg.append(rough_line(400, 330, 600, 330, stroke_width=2, color="#6b21a8"))
 svg.append(text(500, 365, "1. Load Config", font_size=20, anchor="middle"))
-svg.append(text(500, 395, "2. Format Prompts", font_size=20, anchor="middle"))
+svg.append(text(500, 395, "2. Build Messages", font_size=20, anchor="middle"))
 svg.append(text(500, 425, "3. Generate Text", font_size=20, anchor="middle"))
 
 # Inputs
@@ -213,13 +220,13 @@ svg.append(curve_arrow(310, 500, 350, 500, 375, 430, color="#be185d"))
 # Outputs
 svg.append(
     rough_rect(
-        700, 220, 260, 220, fill="#f0fdf4", stroke="#15803d", stroke_width=2
+        700, 200, 260, 320, fill="#f0fdf4", stroke="#15803d", stroke_width=2
     )
 )
 svg.append(
     text(
         830,
-        260,
+        240,
         "Outputs",
         font_size=28,
         font_weight="700",
@@ -228,14 +235,19 @@ svg.append(
     )
 )
 svg.append(
-    text(830, 295, "outputs/&lt;timestamp&gt;/", font_size=20, anchor="middle")
+    text(830, 275, "outputs/&lt;timestamp&gt;/", font_size=20, anchor="middle")
 )
-svg.append(rough_line(720, 320, 940, 320, stroke_width=2, color="#15803d"))
-svg.append(text(720, 360, "📄 output.csv", font_size=22, anchor="start"))
+svg.append(rough_line(720, 295, 940, 295, stroke_width=2, color="#15803d"))
 svg.append(
-    text(745, 385, "(id, text, prompt, output)", font_size=16, anchor="start")
+    text(720, 330, "📄 output.csv / .json", font_size=20, anchor="start")
 )
-svg.append(text(720, 415, "⚙️ *.yaml", font_size=22, anchor="start"))
+svg.append(
+    text(745, 355, "(id, text, messages, output)", font_size=16, anchor="start")
+)
+svg.append(text(720, 390, "⚙️ config.yaml", font_size=20, anchor="start"))
+svg.append(text(720, 420, "📝 prompt.py", font_size=20, anchor="start"))
+svg.append(text(720, 450, "📋 cli_args.json", font_size=20, anchor="start"))
+svg.append(text(720, 480, "📃 run.log", font_size=20, anchor="start"))
 
 svg.append(curve_arrow(630, 330, 660, 330, 690, 330, color="#15803d"))
 
