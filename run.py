@@ -136,12 +136,21 @@ def main() -> None:
         pipe.tokenizer.pad_token = pipe.tokenizer.eos_token
     pipe.tokenizer.padding_side = "left"
 
+    prompts = [
+        pipe.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            **cfg.get("chat_template_kwargs", {}),
+        )
+        for messages in df["messages"]
+    ]
+
     logger.info("Starting generation...")
     # We pass messages as a generator so the pipeline yields outputs iteratively
     df["output"] = [
         output[0]["generated_text"]
         for output in tqdm(
-            pipe((msg for msg in df["messages"]), **cfg.get("generation", {})),
+            pipe((prompt for prompt in prompts), **cfg.get("generation", {})),
             total=len(df),
             desc="Generating responses",
         )

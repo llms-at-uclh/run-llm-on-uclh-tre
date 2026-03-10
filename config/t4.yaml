@@ -5,6 +5,10 @@ pipeline:
   dtype: float16
   batch_size: 1
 
+chat_template:
+  # https://huggingface.co/docs/transformers/internal/tokenization_utils#transformers.PreTrainedTokenizerBase.apply_chat_template
+  enable_thinking: true
+
 generation:
   # https://huggingface.co/docs/transformers/en/main_classes/pipelines#transformers.TextGenerationPipeline.__call__
   return_full_text: false
