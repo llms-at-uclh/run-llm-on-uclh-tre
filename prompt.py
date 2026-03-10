@@ -9,9 +9,11 @@
 #
 # ─────────────────────────────────────────────────────────────────────────────
 
-SYSTEM_PROMPT = """You are a helpful clinical assistant.
+SYSTEM_MESSAGE = """You are a helpful clinical assistant.
 Your task is to read clinical notes and produce a concise, accurate summary.
 Always be factual. Never invent information not present in the note."""
+
+USER_MESSAGE = "Please summarise the following clinical note:\n\n{text}"
 
 
 def build_messages(text: str) -> list[dict]:
@@ -32,9 +34,9 @@ def build_messages(text: str) -> list[dict]:
         final user message.
     """
     return [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": SYSTEM_MESSAGE},
         {
             "role": "user",
-            "content": f"Please summarise the following clinical note:\n\n{text}",  # noqa: E501
+            "content": USER_MESSAGE.format(text=text),  # noqa: E501
         },
     ]
