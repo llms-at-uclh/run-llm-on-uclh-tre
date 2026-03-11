@@ -89,7 +89,7 @@ By default your input file must contain at least two columns with lowercase head
 
 ### 3. Iterate on your prompt
 
-Edit `prompt.py` to define the `SYSTEM_PROMPT` and the `build_messages` function. Use `{text}` to insert content from the CSV row.
+Edit `prompt.py` to define the `SYSTEM_PROMPT`, `USER_MESSAGE` and the `build_messages` function. Use `{text}` to insert content from the CSV row.
 
 Use the `--dry-run` flag to test the pipeline on your local machine.
 
