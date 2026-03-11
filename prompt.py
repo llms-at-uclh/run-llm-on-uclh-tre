@@ -4,7 +4,7 @@
 #
 # HOW TO EDIT:
 #   1. Change SYSTEM_PROMPT to give the model its overall role/instructions.
-#   2. Change the user message in build_messages() to set the per-row task.
+#   2. Change USER_MESSAGE to set the per-row task.
 #      Use {text} anywhere you want the row's text to be inserted.
 #
 # ─────────────────────────────────────────────────────────────────────────────
